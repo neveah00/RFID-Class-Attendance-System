@@ -1,0 +1,118 @@
+#include <SPI.h>  
+#include <MFRC522.h>  
+#include <Wire.h>   
+#include <LiquidCrystal_I2C.h>  
+ 
+// Set the LCD address to 0x27 for a 16 chars and 2 line display  
+ LiquidCrystal_I2C lcd(0x27, 16, 2);  
+ #define SS_PIN 10  
+ #define RST_PIN 9  
+ #define GREEN 2
+ #define YELLOW 3
+ #define RED 4
+ #define buzzer 5
+ MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance.  
+ 
+ void setup(){  
+  Serial.begin(9600);  // Initiate a serial communication  
+  SPI.begin();   // Initiate SPI bus  
+  mfrc522.PCD_Init();  // Initiate MFRC522  
+  lcd.begin();   
+  lcd.backlight(); // Turn on the blacklight and print a message.   
+  pinMode(GREEN, OUTPUT);
+  pinMode(YELLOW, OUTPUT);
+  pinMode(RED, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+ }  
+
+ void loop(){
+   digitalWrite(GREEN,LOW);
+   digitalWrite(YELLOW,HIGH);
+   digitalWrite(RED,LOW);
+
+    // Look for new cards  
+    if ( ! mfrc522.PICC_IsNewCardPresent()){    
+     lcd.setCursor(3,0);  
+     lcd.print("SHOW YOUR");  
+     lcd.setCursor(4,1);  
+     lcd.print("ID CARD");   
+     
+     return;  
+    } 
+
+    else{  
+      lcd.clear();  
+    }  
+  
+    // Select one of the cards  
+    if ( ! mfrc522.PICC_ReadCardSerial()){  
+    return;  
+    }  
+  
+    //Show UID on serial monitor  
+    Serial.print("UID tag :");  
+    String content= "";  
+    byte letter;  
+
+    for (byte i = 0; i < mfrc522.uid.size; i++){  
+      Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");  
+      Serial.print(mfrc522.uid.uidByte[i], HEX);  
+      content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));  
+      content.concat(String(mfrc522.uid.uidByte[i], HEX));  
+    }  
+
+    Serial.println();  
+    content.toUpperCase();   
+
+    if (content.substring(1) == "60 84 4C 80"){ //change here the UID of the card/cards that you want to give access     
+      lcd.print("AIFA HAZLIN");  
+      lcd.setCursor(0,1);  
+      lcd.print("PRESENT");
+      digitalWrite(GREEN,HIGH);
+      digitalWrite(YELLOW,LOW);
+      digitalWrite(RED,LOW);
+      tone(buzzer,200);
+      delay(300);  
+      noTone(buzzer);  
+      delay(2000); 
+      lcd.clear();  
+      digitalWrite(GREEN,LOW);
+      digitalWrite(YELLOW,LOW);
+      digitalWrite(RED,LOW);
+    }  
+  
+    else if (content.substring(1) == "CA 0A 70 B0"){ //change here the UID of the card/cards that you want to give access  
+      lcd.print("AISYAH NABILAH");  
+      lcd.setCursor(0,1);  
+      lcd.print("PRESENT");  
+      digitalWrite(GREEN,HIGH);
+      digitalWrite(YELLOW,LOW);
+      digitalWrite(RED,LOW);
+      tone(buzzer,200);
+      delay(300);  
+      noTone(buzzer);  
+      delay(3000);
+      delay(2000); 
+      lcd.clear();  
+      digitalWrite(GREEN,LOW);
+      digitalWrite(YELLOW,LOW);
+      digitalWrite(RED,LOW); 
+    }  
+
+    else{  
+      lcd.print("UNAUTHORIZE");  
+      lcd.setCursor(0,1);  
+      lcd.print("ACCESS"); 
+      digitalWrite(GREEN,LOW);
+      digitalWrite(YELLOW,LOW);
+      digitalWrite(RED,HIGH);
+      tone(buzzer, 300);  
+      delay(2000);   
+      lcd.clear(); 
+      digitalWrite(GREEN,LOW);
+      digitalWrite(YELLOW,LOW);
+      digitalWrite(RED,LOW); 
+      noTone(buzzer);
+    }  
+
+ }
